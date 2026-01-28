@@ -1,28 +1,17 @@
-// src/worker.ts
+// worker.ts
 import { adjustBalance, topUpBalance, deductBalance } from "./balance.ts";
 import { uploadUserImage } from "./github.ts";
 import { addContact, getContacts } from "./contacts.ts";
-import { db } from "./db.ts";
 
-export async function handleRequest(conn: Deno.Conn) {
-  const buf = new Uint8Array(1024 * 4);
-  const n = await conn.read(buf);
-  if (!n) return;
+console.log("Storage Worker running...");
 
-  const rawData = new TextDecoder().decode(buf.subarray(0, n));
-  let data;
+Deno.serve(async (req) => {
   try {
-    data = JSON.parse(rawData);
-  } catch {
-    await conn.write(new TextEncoder().encode("Invalid JSON"));
-    return;
-  }
+    const data = await req.json();
+    const { action, payload } = data;
 
-  const { action, payload } = data;
+    let response: any = {};
 
-  let response: any = {};
-
-  try {
     switch (action) {
       case "upload_avatar":
         response.url = await uploadUserImage(payload.userId, payload.filePath);
@@ -52,10 +41,9 @@ export async function handleRequest(conn: Deno.Conn) {
       default:
         response.error = "Unknown action";
     }
-  } catch (err) {
-    response.error = err.message;
-  }
 
-  await conn.write(new TextEncoder().encode(JSON.stringify(response)));
-  conn.close();
-}
+    return new Response(JSON.stringify(response), { headers: { "Content-Type": "application/json" } });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), { headers: { "Content-Type": "application/json" } });
+  }
+});
