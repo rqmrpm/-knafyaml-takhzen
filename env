@@ -1,15 +1,15 @@
 # -----------------------------
 # Supabase / قاعدة البيانات
 # -----------------------------
-DATABASE_URL=postgresql://postgres:3FbcgXC%3JYeHN4@db.eybwqmyqqwhyzjrhnfht.supabase.co:5432/postgres
+DATABASE_URL=
 
 # -----------------------------
 # GitHub / مستودع الصور
 # -----------------------------
-GITHUB_REPO=https://github.com/rqmrpm/kunafa-user-avatars
-GITHUB_TOKEN=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
+GITHUB_REPO=
+GITHUB_TOKEN=
 
 # -----------------------------
 # إعدادات العامل
 # -----------------------------
-PORT=8000
+PORT=
