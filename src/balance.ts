@@ -1,29 +1,20 @@
-// src/balance.ts
-import { db } from "./db.ts";
+// balance.ts
+import { db, connectDB } from "./db.ts";
 
-// تعديل رصيد المستخدم عند شحن أو هدايا أو خصم
-export async function adjustBalance(userId: string, amount: number) {
-  const user = await db.getUser(userId);
-  if (!user) throw new Error("User not found");
+await connectDB();
 
-  const newBalance = user.balance + amount;
-
-  if (newBalance < 0) {
-    throw new Error("Insufficient balance");
-  }
-
-  await db.updateBalance(userId, newBalance);
-  return newBalance;
+export async function adjustBalance(userId: string, amount: number): Promise<number> {
+  const res = await db.queryObject<{balance: number}>(
+    "UPDATE users SET balance = balance + $1 WHERE id = $2 RETURNING balance",
+    amount, userId
+  );
+  return res.rows[0].balance;
 }
 
-// شحن رصيد المستخدم (زيادة)
-export async function topUpBalance(userId: string, amount: number) {
-  if (amount <= 0) throw new Error("Amount must be positive");
-  return await adjustBalance(userId, amount);
+export async function topUpBalance(userId: string, amount: number): Promise<number> {
+  return adjustBalance(userId, amount);
 }
 
-// خصم رصيد عند إرسال هدية
-export async function deductBalance(userId: string, amount: number) {
-  if (amount <= 0) throw new Error("Amount must be positive");
-  return await adjustBalance(userId, -amount);
+export async function deductBalance(userId: string, amount: number): Promise<number> {
+  return adjustBalance(userId, -amount);
 }
